@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block title %}Chat with {{ document.title }} - DocAI{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-4 py-3">
+  <!-- Top Bar / Back button -->
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="d-flex align-items-center gap-2">
+      <a href="/" class="btn btn-sm btn-outline-secondary rounded-pill px-3">
+        <i class="fa-solid fa-arrow-left me-1"></i> Back to Documents
+      </a>
+      <span class="text-secondary small d-none d-md-inline">|</span>
+      <h6 class="mb-0 fw-bold text-truncate" style="max-width: 450px;">
+        <i class="fa-solid fa-file-lines text-primary me-2"></i>{{ document.title }}
+      </h6>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+      <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-2" id="languageBadge">
+        <i class="fa-solid fa-language me-1"></i> Lang: Auto
+      </span>
+      <button class="btn btn-sm btn-outline-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#historyModal" onclick="loadChatHistory(DOC_ID)">
+        <i class="fa-solid fa-clock-rotate-left me-1"></i> History
+      </button>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <!-- Sidebar: Document Details & Suggested Questions -->
+    <div class="col-md-3">
+      <!-- Doc Info Card -->
+      <div class="card shadow-sm border-0 rounded-4 mb-3">
+        <div class="card-body p-3">
+          <div class="d-flex align-items-center gap-2 mb-2">
+            <span class="badge bg-primary text-uppercase px-2 py-1">{{ document.file_type }}</span>
+            <span class="text-secondary small">{{ document.uploaded_at|date:"M d, Y H:i" }}</span>
+          </div>
+          <h6 class="fw-bold mb-1 text-truncate" title="{{ document.title }}">{{ document.title }}</h6>
+          <p class="text-secondary small mb-0">RAG Collection ID: <code>{{ document.collection_id }}</code></p>
+        </div>
+      </div>
+
+      <!-- Suggested Questions Card -->
+      <div class="card shadow-sm border-0 rounded-4 mb-3">
+        <div class="card-body p-3">
+          <h6 class="fw-semibold mb-2 d-flex align-items-center gap-2">
+            <i class="fa-solid fa-wand-magic-sparkles text-primary"></i> Suggested Questions
+          </h6>
+          <p class="text-secondary small mb-3">
+            Click any question to ask Gemini directly about this document:
+          </p>
+          <div id="suggestedQuestions" class="d-flex flex-wrap gap-1">
+            <!-- Chips injected via JS loadSuggestedQuestions() -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Capability Highlights Card -->
+      <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body p-3">
+          <h6 class="fw-semibold mb-2 small text-uppercase text-secondary">Features Active</h6>
+          <ul class="list-unstyled mb-0 small text-secondary">
+            <li class="mb-1"><i class="fa-solid fa-check text-success me-2"></i>ChromaDB Vector Retrieval</li>
+            <li class="mb-1"><i class="fa-solid fa-check text-success me-2"></i>Gemini Flash Generation</li>
+            <li class="mb-1"><i class="fa-solid fa-check text-success me-2"></i>Source Chunk Verification</li>
+            <li class="mb-1"><i class="fa-solid fa-check text-success me-2"></i>Voice Speech-to-Text</li>
+            <li class="mb-1"><i class="fa-solid fa-check text-success me-2"></i>Text-to-Speech Voice Output</li>
+            <li><i class="fa-solid fa-check text-success me-2"></i>Automatic Multilingual Answering</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Chat Column -->
+    <div class="col-md-9">
+      <div class="card shadow-sm border-0 rounded-4 d-flex flex-column" style="height: calc(100vh - 150px);">
+        <!-- Chat messages container -->
+        <div id="chatContainer" class="flex-grow-1 p-3">
+          <!-- Initial Welcome Message -->
+          <div class="ai-message shadow-sm">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <span class="fw-bold text-primary small d-flex align-items-center gap-1">
+                <i class="fa-solid fa-robot"></i> DocAI Assistant
+              </span>
+              <button class="btn btn-sm btn-link text-secondary p-0" onclick="speakText('Hello! I have indexed your document. Ask me anything or select one of the suggested questions.')" title="Listen">
+                <i class="fa-solid fa-volume-high"></i>
+              </button>
+            </div>
+            <div>
+              Hello! I have indexed <strong>{{ document.title }}</strong> into my vector database. You can ask questions in English or any other language, use voice input, and review the exact source chunks retrieved from the document.
+            </div>
+          </div>
+        </div>
+
+        <!-- Chat Input Footer Area -->
+        <div class="p-3 border-top" style="border-color: var(--border-color) !important; background: var(--card-bg);">
+          <form id="chatForm" onsubmit="event.preventDefault(); handleSend();" class="d-flex align-items-center gap-2">
+            <input type="text" id="questionInput" class="form-control rounded-pill px-4 py-2" placeholder="Ask any question about this document..." autocomplete="off">
+            
+            <!-- Voice Input Button (Speech-to-Text) -->
+            <button type="button" class="btn btn-outline-secondary rounded-circle shadow-sm" id="micBtn" onclick="startVoiceInput()" title="Voice Input (Speak)">
+              <i class="fa-solid fa-microphone"></i>
+            </button>
+            
+            <!-- Send Button -->
+            <button type="submit" class="btn btn-primary rounded-circle shadow-sm" id="sendBtn" title="Send Question" style="width: 42px; height: 42px;">
+              <i class="fa-solid fa-paper-plane"></i>
+            </button>
+          </form>
+          <div class="d-flex justify-content-between align-items-center mt-2 px-2 small text-secondary">
+            <span><i class="fa-solid fa-globe me-1"></i> Multi-language supported: Ask in Spanish, French, Hindi, Chinese, etc.</span>
+            <span><i class="fa-solid fa-keyboard me-1"></i> Press Enter to send</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- History Modal -->
+<div class="modal fade" id="historyModal" tabindex="-1" aria-labelledby="historyModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content" style="background: var(--card-bg); color: var(--text-primary); border-color: var(--border-color);">
+      <div class="modal-header" style="border-color: var(--border-color);">
+        <h5 class="modal-title fw-bold" id="historyModalLabel">
+          <i class="fa-solid fa-clock-rotate-left text-primary me-2"></i> Chat History for {{ document.title }}
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4" id="historyContent">
+        <div class="text-center py-4">
+          <div class="spinner-border text-primary" role="status"></div>
+        </div>
+      </div>
+      <div class="modal-footer" style="border-color: var(--border-color);">
+        <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Document Metadata Injection -->
+<script>
+const DOC_ID = {{ document.id }};
+const DOC_TITLE = "{{ document.title|escapejs }}";
+const SUGGESTED_QUESTIONS = {{ document.suggested_questions|safe }};
+</script>
+{% endblock %}

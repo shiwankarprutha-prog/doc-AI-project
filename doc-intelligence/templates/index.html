@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}DocAI - Intelligent Document Assistant{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <!-- Hero Section -->
+  <div class="p-5 mb-4 rounded-4 shadow-sm text-center text-white hero-banner" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+    <div class="container-fluid py-3">
+      <h1 class="display-5 fw-bold mb-3">AI Document Intelligence Assistant</h1>
+      <p class="fs-5 max-w-700 mx-auto opacity-90">
+        Transform your PDFs and Text files into conversational knowledge bases. Powered by Gemini, Vector RAG search, voice interaction, and multi-language comprehension.
+      </p>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Document Upload Column -->
+    <div class="col-lg-5">
+      <div class="card shadow-sm border-0 rounded-4 h-100">
+        <div class="card-body p-4 d-flex flex-column">
+          <div class="d-flex align-items-center gap-2 mb-3">
+            <div class="rounded-circle p-2 bg-primary bg-opacity-10 text-primary">
+              <i class="fa-solid fa-cloud-arrow-up fs-5"></i>
+            </div>
+            <h5 class="card-title mb-0 fw-semibold">Upload Document</h5>
+          </div>
+          <p class="text-secondary small mb-3">
+            Upload your PDF or TXT document. DocAI will automatically extract text, create vector embeddings, and generate tailored questions.
+          </p>
+
+          <!-- Drag and Drop Zone -->
+          <div id="dropZone" class="drop-zone my-auto d-flex flex-column align-items-center justify-content-center">
+            <i class="fa-solid fa-file-arrow-up fs-1 text-primary mb-3"></i>
+            <h6 class="fw-semibold mb-1">Drag & drop your file here</h6>
+            <p class="text-secondary small mb-2">or browse from your computer</p>
+            <span class="badge bg-secondary-subtle text-secondary px-3 py-2 rounded-pill">
+              <i class="fa-solid fa-file-pdf me-1"></i> PDF or <i class="fa-solid fa-file-lines me-1"></i> TXT (up to 20MB)
+            </span>
+            <input type="file" id="fileInput" accept=".pdf,.txt" style="display: none;">
+          </div>
+
+          <!-- Progress Bar -->
+          <div id="uploadProgress" class="progress my-3 d-none" style="height: 10px; border-radius: 6px;">
+            <div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" role="progressbar" style="width: 100%"></div>
+          </div>
+
+          <!-- Status Message -->
+          <div id="uploadStatus" class="small mt-2 text-center text-secondary"></div>
+
+          <!-- Manual Trigger Button -->
+          <button id="uploadBtn" class="btn btn-primary w-100 rounded-pill py-2 mt-3 fw-semibold shadow-sm" onclick="document.getElementById('fileInput').click()">
+            <span id="uploadSpinner" class="spinner-border spinner-border-sm me-2 d-none" role="status" aria-hidden="true"></span>
+            <i class="fa-solid fa-plus me-1" id="uploadIcon"></i> Select File to Upload
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Uploaded Documents Column -->
+    <div class="col-lg-7">
+      <div class="card shadow-sm border-0 rounded-4 h-100">
+        <div class="card-body p-4">
+          <div class="d-flex align-items-center justify-content-between mb-3">
+            <div class="d-flex align-items-center gap-2">
+              <div class="rounded-circle p-2 bg-success bg-opacity-10 text-success">
+                <i class="fa-solid fa-layer-group fs-5"></i>
+              </div>
+              <h5 class="card-title mb-0 fw-semibold">Your Documents</h5>
+            </div>
+            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="loadDocuments()" title="Refresh document list">
+              <i class="fa-solid fa-rotate-right me-1"></i> Refresh
+            </button>
+          </div>
+          <p class="text-secondary small mb-4">
+            Select a document to initiate conversational Q&A, view vector references, or replay voice answers.
+          </p>
+
+          <!-- Documents List Grid -->
+          <div id="documentsGrid" class="row g-3">
+            <!-- Loaded dynamically via JS loadDocuments() -->
+            <div class="col-12 text-center py-5">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading documents...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

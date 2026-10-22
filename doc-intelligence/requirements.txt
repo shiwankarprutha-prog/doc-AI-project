@@ -1,0 +1,6 @@
+Django==4.2.7
+google-genai>=1.16.0
+chromadb==0.5.3
+PyPDF2==3.0.1
+pdfminer.six
+python-dotenv==1.0.0
